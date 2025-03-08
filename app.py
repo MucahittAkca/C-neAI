@@ -7,31 +7,6 @@ from tools.final_answer import FinalAnswerTool
 
 from Gradio_UI import GradioUI
 
-# Below is an example of a tool that does nothing. Amaze us with your creativity !
-@tool
-def get_weather(city: str) -> str:
-    """Fetches the current weather for a given city.
-    
-    Args:
-        city: The name of the city.
-    
-    Returns:
-        A string describing the temperature and weather conditions.
-    """
-    API_KEY = "SENİN_API_KEYİN"  # OpenWeatherMap API key buraya gelecek
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-
-    try:
-        response = requests.get(url)
-        data = response.json()
-        if response.status_code == 200:
-            temp = data["main"]["temp"]
-            weather_desc = data["weather"][0]["description"]
-            return f"🌤️ {city} için güncel hava durumu: {temp}°C, {weather_desc}."
-        else:
-            return f"❌ {city} için hava durumu bilgisi alınamadı. Hata: {data.get('message', 'Bilinmeyen hata')}"
-    except Exception as e:
-        return f"⚠️ Hava durumu sorgularken hata oluştu: {str(e)}"
 
 
 @tool
