@@ -8,7 +8,7 @@ from tools.final_answer import FinalAnswerTool
 
 from Gradio_UI import GradioUI
 
-API_KEY = "c172a615aaeb6ba28fa8a91bedfd8ebe"  # TMDb API anahtarını buraya ekle
+API_KEY = os.getenv("TMDB_API_KEY")  
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 @tool
