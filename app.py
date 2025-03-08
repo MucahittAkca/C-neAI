@@ -44,7 +44,14 @@ def get_movie_recommendations(genre: str) -> str:
 
 @tool
 def get_similar_tv_shows(show_name: str) -> str:
-    """Finds similar TV shows based on the given show's name."""
+    """Finds similar TV shows based on the given show's name.
+
+    Args:
+        show_name (str): The name of the TV show for which similar shows are requested.
+
+    Returns:
+        str: A list of similar TV shows with their ratings.
+    """
     url = f"{TMDB_BASE_URL}/search/tv?api_key={API_KEY}&query={show_name}"
     
     try:
