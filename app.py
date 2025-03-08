@@ -11,7 +11,6 @@ from Gradio_UI import GradioUI
 API_KEY = "c172a615aaeb6ba28fa8a91bedfd8ebe"  # TMDb API anahtarını buraya ekle
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
-@tool
 def get_movie_recommendations(genre: str) -> str:
     """Fetches top-rated, well-known movies from TMDb based on a given genre.
 
@@ -47,7 +46,7 @@ def get_movie_recommendations(genre: str) -> str:
     except Exception as e:
         return f"Error fetching movie recommendations: {str(e)}"
 
-@tool
+
 def get_similar_tv_shows(show_name: str) -> str:
     """Finds similar TV shows based on the given show's name.
 
@@ -76,7 +75,7 @@ def get_similar_tv_shows(show_name: str) -> str:
     except Exception as e:
         return f"Error fetching similar shows: {str(e)}"
 
-@tool
+
 def get_latest_popular_movies() -> str:
     """Fetches the latest popular movies from TMDb."""
     url = f"{TMDB_BASE_URL}/movie/popular?api_key={API_KEY}&language=en-US&page=1"
@@ -93,7 +92,7 @@ def get_latest_popular_movies() -> str:
     except Exception as e:
         return f"Error fetching latest movies: {str(e)}"
 
-@tool
+
 def get_movie_by_mood(mood: str) -> str:
     """Recommends a single movie based on user's mood.
 
