@@ -1,108 +1,102 @@
 from smolagents import CodeAgent,DuckDuckGoSearchTool, HfApiModel,load_tool,tool
 import datetime
 import requests
+import random
 import pytz
 import yaml
 from tools.final_answer import FinalAnswerTool
 
 from Gradio_UI import GradioUI
 
-
-
-@tool
-def get_current_time_in_timezone(timezone: str) -> str:
-    """A tool that fetches the current local time in a specified timezone.
-    Args:
-        timezone: A string representing a valid timezone (e.g., 'America/New_York').
-    """
-    try:
-        # Create timezone object
-        tz = pytz.timezone(timezone)
-        # Get current time in that timezone
-        local_time = datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
-        return f"The current local time in {timezone} is: {local_time}"
-    except Exception as e:
-        return f"Error fetching time for timezone '{timezone}': {str(e)}"
+API_KEY = "c172a615aaeb6ba28fa8a91bedfd8ebe"  # TMDb API anahtarını buraya ekle
+TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 @tool
-def get_city_info(city: str) -> str:
-    """Fetches basic information about a city from Wikipedia.
-    
+def get_movie_recommendations(genre: str) -> str:
+    """Fetches top-rated movies from IMDb (via TMDb API) based on a given genre.
     Args:
-        city: The name of the city.
-    
-    Returns:
-        A short summary about the city.
+        genre: The movie genre (e.g., 'Action', 'Drama', 'Comedy').
     """
-    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{city}"
-
-    try:
-        response = requests.get(url)
-        data = response.json()
-        if "extract" in data:
-            return f"🏙️ {city} hakkında bilgi: {data['extract']}"
-        else:
-            return f"❌ {city} hakkında Wikipedia'da bilgi bulunamadı."
-    except Exception as e:
-        return f"⚠️ Şehir bilgisi alırken hata oluştu: {str(e)}"
-
-
-
-
-@tool
-def find_hotels(city: str) -> str:
-    """Finds top hotels in a given city using the free HotelAPI (no API key required).
+    genre_map = {
+        "Action": 28, "Adventure": 12, "Animation": 16, "Comedy": 35,
+        "Crime": 80, "Documentary": 99, "Drama": 18, "Family": 10751,
+        "Fantasy": 14, "History": 36, "Horror": 27, "Music": 10402,
+        "Mystery": 9648, "Romance": 10749, "Science Fiction": 878,
+        "Thriller": 53, "War": 10752, "Western": 37
+    }
     
-    Args:
-        city: The name of the city.
+    if genre not in genre_map:
+        return "Invalid genre. Please try categories like Action, Drama, Comedy, etc."
     
-    Returns:
-        A list of popular hotels in the city.
-    """
-    url = f"https://api.hotelapi.co/free?location={city}"
-
-    try:
-        response = requests.get(url)
-        data = response.json()
-        
-        if response.status_code == 200 and "hotels" in data:
-            hotels = data["hotels"][:5]  # İlk 5 oteli alalım
-            hotel_list = "\n".join([f"🏨 {hotel['name']} - ⭐ {hotel['rating']} - 📍 {hotel['address']}" for hotel in hotels])
-            return f"📍 {city} içindeki popüler oteller:\n{hotel_list}"
-        else:
-            return f"❌ {city} için otel bilgisi bulunamadı. Hata: {data.get('message', 'Bilinmeyen hata')}"
-    except Exception as e:
-        return f"⚠️ Otel bilgisi alırken hata oluştu: {str(e)}"
-
-
-
-@tool
-def get_weather(city: str) -> str:
-    """Fetches the current weather for a given city.
-    
-    Args:
-        city: The name of the city.
-    
-    Returns:
-        A string describing the temperature and weather conditions.
-    """
-    API_KEY = "b83f226242ec9f5ae14ca6a19918787e"
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    url = f"{TMDB_BASE_URL}/discover/movie?api_key={API_KEY}&with_genres={genre_map[genre]}&sort_by=vote_average.desc"
 
     try:
         response = requests.get(url)
         data = response.json()
         if response.status_code == 200:
-            temp = data["main"]["temp"]
-            weather_desc = data["weather"][0]["description"]
-            return f"🌤️ {city} için güncel hava durumu: {temp}°C, {weather_desc}."
+            movies = data["results"][:5]
+            recommendations = "\n".join([f"{movie['title']} ({movie['vote_average']}/10)" for movie in movies])
+            return f"Here are some top-rated {genre} movies:\n{recommendations}"
         else:
-            return f"❌ {city} için hava durumu bilgisi alınamadı. Hata: {data.get('message', 'Bilinmeyen hata')}"
+            return f"Couldn't fetch movie data. Error: {data.get('status_message', 'Unknown error')}"
     except Exception as e:
-        return f"⚠️ Hava durumu sorgularken hata oluştu: {str(e)}"
+        return f"Error fetching movie recommendations: {str(e)}"
 
+@tool
+def get_similar_tv_shows(show_name: str) -> str:
+    """Finds similar TV shows based on the given show's name."""
+    url = f"{TMDB_BASE_URL}/search/tv?api_key={API_KEY}&query={show_name}"
+    
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if response.status_code == 200 and data["results"]:
+            show_id = data["results"][0]["id"]
+            similar_url = f"{TMDB_BASE_URL}/tv/{show_id}/similar?api_key={API_KEY}"
+            similar_response = requests.get(similar_url)
+            similar_data = similar_response.json()
+            
+            similar_shows = similar_data["results"][:5]
+            recommendations = "\n".join([f"{show['name']} ({show['vote_average']}/10)" for show in similar_shows])
+            return f"If you liked '{show_name}', you might also enjoy:\n{recommendations}"
+        else:
+            return f"Couldn't find recommendations for '{show_name}'."
+    except Exception as e:
+        return f"Error fetching similar shows: {str(e)}"
 
+@tool
+def get_latest_popular_movies() -> str:
+    """Fetches the latest popular movies from TMDb."""
+    url = f"{TMDB_BASE_URL}/movie/popular?api_key={API_KEY}&language=en-US&page=1"
 
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if response.status_code == 200:
+            movies = data["results"][:5]
+            recommendations = "\n".join([f"{movie['title']} ({movie['vote_average']}/10)" for movie in movies])
+            return f"Here are the latest popular movies:\n{recommendations}"
+        else:
+            return f"Couldn't fetch latest movies. Error: {data.get('status_message', 'Unknown error')}"
+    except Exception as e:
+        return f"Error fetching latest movies: {str(e)}"
+
+@tool
+def get_movie_by_mood(mood: str) -> str:
+    """Recommends a movie based on user's mood."""
+    mood_map = {
+        "happy": ["Comedy", "Adventure", "Family"],
+        "sad": ["Drama", "Romance"],
+        "excited": ["Action", "Thriller"],
+        "scared": ["Horror", "Mystery"],
+        "thoughtful": ["Science Fiction", "Documentary"]
+    }
+
+    if mood not in mood_map:
+        return "I couldn't recognize that mood. Try happy, sad, excited, scared, or thoughtful."
+    
+    genre = random.choice(mood_map[mood])
+    return get_movie_recommendations(genre)
 
 
 
