@@ -9,14 +9,30 @@ from Gradio_UI import GradioUI
 
 # Below is an example of a tool that does nothing. Amaze us with your creativity !
 @tool
-def my_custom_tool(arg1:str, arg2:int)-> str: #it's import to specify the return type
-    #Keep this format for the description / args / args description but feel free to modify the tool
-    """A tool that does nothing yet 
+def get_weather(city: str) -> str:
+    """Fetches the current weather for a given city.
+    
     Args:
-        arg1: the first argument
-        arg2: the second argument
+        city: The name of the city.
+    
+    Returns:
+        A string describing the temperature and weather conditions.
     """
-    return "What magic will you build ?"
+    API_KEY = "SENİN_API_KEYİN"  # OpenWeatherMap API key buraya gelecek
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if response.status_code == 200:
+            temp = data["main"]["temp"]
+            weather_desc = data["weather"][0]["description"]
+            return f"🌤️ {city} için güncel hava durumu: {temp}°C, {weather_desc}."
+        else:
+            return f"❌ {city} için hava durumu bilgisi alınamadı. Hata: {data.get('message', 'Bilinmeyen hata')}"
+    except Exception as e:
+        return f"⚠️ Hava durumu sorgularken hata oluştu: {str(e)}"
+
 
 @tool
 def get_current_time_in_timezone(timezone: str) -> str:
@@ -32,6 +48,89 @@ def get_current_time_in_timezone(timezone: str) -> str:
         return f"The current local time in {timezone} is: {local_time}"
     except Exception as e:
         return f"Error fetching time for timezone '{timezone}': {str(e)}"
+
+@tool
+def get_city_info(city: str) -> str:
+    """Fetches basic information about a city from Wikipedia.
+    
+    Args:
+        city: The name of the city.
+    
+    Returns:
+        A short summary about the city.
+    """
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{city}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if "extract" in data:
+            return f"🏙️ {city} hakkında bilgi: {data['extract']}"
+        else:
+            return f"❌ {city} hakkında Wikipedia'da bilgi bulunamadı."
+    except Exception as e:
+        return f"⚠️ Şehir bilgisi alırken hata oluştu: {str(e)}"
+
+
+
+
+@tool
+def find_hotels(city: str) -> str:
+    """Finds top hotels in a given city using the free HotelAPI (no API key required).
+    
+    Args:
+        city: The name of the city.
+    
+    Returns:
+        A list of popular hotels in the city.
+    """
+    url = f"https://api.hotelapi.co/free?location={city}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        
+        if response.status_code == 200 and "hotels" in data:
+            hotels = data["hotels"][:5]  # İlk 5 oteli alalım
+            hotel_list = "\n".join([f"🏨 {hotel['name']} - ⭐ {hotel['rating']} - 📍 {hotel['address']}" for hotel in hotels])
+            return f"📍 {city} içindeki popüler oteller:\n{hotel_list}"
+        else:
+            return f"❌ {city} için otel bilgisi bulunamadı. Hata: {data.get('message', 'Bilinmeyen hata')}"
+    except Exception as e:
+        return f"⚠️ Otel bilgisi alırken hata oluştu: {str(e)}"
+
+
+
+@tool
+def get_weather(city: str) -> str:
+    """Fetches the current weather for a given city.
+    
+    Args:
+        city: The name of the city.
+    
+    Returns:
+        A string describing the temperature and weather conditions.
+    """
+    API_KEY = "b83f226242ec9f5ae14ca6a19918787e"
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if response.status_code == 200:
+            temp = data["main"]["temp"]
+            weather_desc = data["weather"][0]["description"]
+            return f"🌤️ {city} için güncel hava durumu: {temp}°C, {weather_desc}."
+        else:
+            return f"❌ {city} için hava durumu bilgisi alınamadı. Hata: {data.get('message', 'Bilinmeyen hata')}"
+    except Exception as e:
+        return f"⚠️ Hava durumu sorgularken hata oluştu: {str(e)}"
+
+
+
+
+
+
 
 
 final_answer = FinalAnswerTool()
