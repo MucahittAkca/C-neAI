@@ -90,7 +90,14 @@ def get_latest_popular_movies() -> str:
 
 @tool
 def get_movie_by_mood(mood: str) -> str:
-    """Recommends a movie based on user's mood."""
+    """Recommends a movie based on user's mood.
+
+    Args:
+        mood (str): The current mood of the user (e.g., 'happy', 'sad', 'excited', 'scared', 'thoughtful').
+
+    Returns:
+        str: A recommended movie based on the mood.
+    """
     mood_map = {
         "happy": ["Comedy", "Adventure", "Family"],
         "sad": ["Drama", "Romance"],
