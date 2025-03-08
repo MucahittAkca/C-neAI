@@ -12,40 +12,48 @@ API_KEY = "c172a615aaeb6ba28fa8a91bedfd8ebe"  # TMDb API anahtarını buraya ekl
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 @tool
-def get_movie_recommendations(genre: str) -> str:
-    """Fetches top-rated, well-known movies from TMDb based on a given genre.
+def get_movie_by_mood(mood: str) -> str:
+    """Recommends a single movie based on user's mood.
 
     Args:
-        genre (str): The movie genre (e.g., 'Action', 'Drama', 'Comedy').
+        mood (str): The current mood of the user (e.g., 'happy', 'sad', 'excited', 'scared', 'thoughtful').
 
     Returns:
-        str: A list of recommended movies.
+        str: A single recommended movie based on the mood.
     """
-    genre_map = {
-        "Action": 28, "Adventure": 12, "Animation": 16, "Comedy": 35,
-        "Crime": 80, "Documentary": 99, "Drama": 18, "Family": 10751,
-        "Fantasy": 14, "History": 36, "Horror": 27, "Music": 10402,
-        "Mystery": 9648, "Romance": 10749, "Science Fiction": 878,
-        "Thriller": 53, "War": 10752, "Western": 37
+    mood_map = {
+        "happy": ["Comedy", "Adventure", "Family"],
+        "sad": ["Drama", "Romance"],
+        "excited": ["Action", "Thriller"],
+        "scared": ["Horror", "Mystery"],
+        "thoughtful": ["Science Fiction", "Documentary"]
     }
 
-    if genre not in genre_map:
-        return "Invalid genre. Please try categories like Action, Drama, Comedy, etc."
-    
-    # **Min vote count ekledik (min 1000 oy alan filmleri al)**
-    url = f"{TMDB_BASE_URL}/discover/movie?api_key={API_KEY}&with_genres={genre_map[genre]}&sort_by=vote_average.desc&vote_count.gte=1000"
+    mood_lower = mood.lower()
+    if "düşük" in mood_lower or "üzgün" in mood_lower or "depresif" in mood_lower:
+        normalized_mood = "sad"
+    elif "mutlu" in mood_lower or "neşeli" in mood_lower:
+        normalized_mood = "happy"
+    elif "korkmuş" in mood_lower or "gergin" in mood_lower:
+        normalized_mood = "scared"
+    elif "heyecanlı" in mood_lower or "enerjik" in mood_lower:
+        normalized_mood = "excited"
+    elif "düşünceli" in mood_lower or "felsefi" in mood_lower:
+        normalized_mood = "thoughtful"
+    else:
+        return "I couldn't recognize that mood. Try happy, sad, excited, scared, or thoughtful."
 
-    try:
-        response = requests.get(url)
-        data = response.json()
-        if response.status_code == 200:
-            movies = data["results"][:5]  # İlk 5 filmi getir
-            recommendations = "\n".join([f"{movie['title']} ({movie['vote_average']}/10)" for movie in movies])
-            return f"Here are some top-rated {genre} movies:\n{recommendations}"
-        else:
-            return f"Couldn't fetch movie data. Error: {data.get('status_message', 'Unknown error')}"
-    except Exception as e:
-        return f"Error fetching movie recommendations: {str(e)}"
+    # Rastgele bir tür seç
+    genre = random.choice(mood_map[normalized_mood])
+    movies_list = get_movie_recommendations(genre)
+
+    # Listeyi parçala ve ilk filmi seç
+    movies = movies_list.split('\n')[1:]  # İlk satırı atla ("Here are some top-rated X movies")
+    if movies:
+        recommended_movie = movies[0].strip()  # İlk filmi al
+        return f"I recommend you watch: {recommended_movie}"
+    else:
+        return "Couldn't find a good movie for your mood, try again!"
 
 @tool
 def get_similar_tv_shows(show_name: str) -> str:
