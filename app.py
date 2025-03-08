@@ -13,9 +13,13 @@ TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 @tool
 def get_movie_recommendations(genre: str) -> str:
-    """Fetches top-rated movies from IMDb (via TMDb API) based on a given genre.
+    """Fetches top-rated, well-known movies from TMDb based on a given genre.
+
     Args:
-        genre: The movie genre (e.g., 'Action', 'Drama', 'Comedy').
+        genre (str): The movie genre (e.g., 'Action', 'Drama', 'Comedy').
+
+    Returns:
+        str: A list of recommended movies.
     """
     genre_map = {
         "Action": 28, "Adventure": 12, "Animation": 16, "Comedy": 35,
@@ -24,17 +28,18 @@ def get_movie_recommendations(genre: str) -> str:
         "Mystery": 9648, "Romance": 10749, "Science Fiction": 878,
         "Thriller": 53, "War": 10752, "Western": 37
     }
-    
+
     if genre not in genre_map:
         return "Invalid genre. Please try categories like Action, Drama, Comedy, etc."
     
-    url = f"{TMDB_BASE_URL}/discover/movie?api_key={API_KEY}&with_genres={genre_map[genre]}&sort_by=vote_average.desc"
+    # **Min vote count ekledik (min 1000 oy alan filmleri al)**
+    url = f"{TMDB_BASE_URL}/discover/movie?api_key={API_KEY}&with_genres={genre_map[genre]}&sort_by=vote_average.desc&vote_count.gte=1000"
 
     try:
         response = requests.get(url)
         data = response.json()
         if response.status_code == 200:
-            movies = data["results"][:5]
+            movies = data["results"][:5]  # İlk 5 filmi getir
             recommendations = "\n".join([f"{movie['title']} ({movie['vote_average']}/10)" for movie in movies])
             return f"Here are some top-rated {genre} movies:\n{recommendations}"
         else:
