@@ -137,7 +137,7 @@ with open("prompts.yaml", 'r') as stream:
     
 agent = CodeAgent(
     model=model,
-    tools=[final_answer, get_weather, get_city_info, find_hotels, get_current_time_in_timezone], ## add your tools here (don't remove final answer)
+    tools=[final_answer,get_movie_recommendations, get_similar_tv_shows, get_latest_popular_movies, get_movie_by_mood], ## add your tools here (don't remove final answer)
     max_steps=6,
     verbosity_level=1,
     grammar=None,
